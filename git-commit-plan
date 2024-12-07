@@ -80,6 +80,14 @@ deleteCommitMessage(){
     echo
 }
 
+    #   git commit-plan --commit -c
+commitChanges(){
+    # option to commit staged changes using a commit plan as the message
+    # check for staged changes
+    # promt the user to select a message from the plan
+    # commit the changes with the message
+    # remove the selected commit message from the commit-plan
+}
 
 
 # |----------------------|
@@ -135,8 +143,9 @@ while [[ $# -gt 0 ]]; do
             deleteCommitMessage
             exit 0
             ;;
-        *)
-
+        --commit | -c)
+            commitChanges
+            exit 0
             ;;
     esac
     shift
