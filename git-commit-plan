@@ -1,39 +1,60 @@
 #!/bin/zsh
 
-# if
-# branch already has a commit-plan
-    # display the commit plan
-# else
-    # prompt user to create one
+# |---------------------------|
+# |        Commit-Plan        |
+# |---------------------------|
 
-echo
-echo "Commit-Plan:"
-echo " - Add your Commit messages."
-echo " - Press <ENTER> to continue."
-echo " - Enter an empty message to Finish."
-echo
+BRANCH=$(git symbolic-ref --short HEAD)
 
-commit_plans=()
+createCommitPlan() {
+    echo
+    echo "Commit-Plan:"
+    echo " - Add your Commit messages."
+    echo " - Press <ENTER> to continue."
+    echo " - Enter an empty message to Finish."
+    echo
 
-while true; do
-    echo -n " => "
-    read -r plan < /dev/tty
-    # if plan is empty
-    if [[ -z "$plan" ]]; then
-        break;
-    else
-        commit_plans+=("$plan")
-    fi
-done
+    commit_plans=()
+    while true; do
+        echo -n " => "
+        read -r plan < /dev/tty
+        if [[ -z "$plan" ]]; then
+            # if plan is empty
+            break;
+        else
+            commit_plans+=("$plan")
+        fi
+    done
 
-# Display collected commit-plans
-echo "You entered the following commit-plans:"
-for plan in "${commit_plans[@]}"; do
-    echo "- $plan"
-done
+    no_spaces=("${(@)commit_plans[@]%%[[:space:]]##}")
+    no_spaces=("${no_spaces[@]// /_}")
+    commit_data="${(j:%:)no_spaces}"
+    git config "branch.$BRANCH.commit-plan" "$commit_data"
+    echo "commit-plan created\n"
+}
 
-no_spaces=(${commit_plans[@]// /_})
-commit_data=${(j:%:)no_spaces}
-echo "$commit_data"
+showCommitPlan(){
+    commit_data=$(git config --get branch.$BRANCH.commit-plan)
+    local commit_plans=("${(s:%:)commit_data}")
+    echo
+    echo "Commit-Plan:"
+    echo
+    for plan in "${commit_plans[@]}"; do
+        echo " => ${plan//_/ }"
+    done
+    echo
+    echo "commit changes using a message with:"
+    echo "'git commit-plan --commit'"
+    echo
+}
 
-git config "branch.${$(git symbolic-ref --short HEAD)}.commit-plan" "$commit_data"
+
+#   main()
+# ----------
+
+# if commit-plan already exists
+if git config --get branch.$BRANCH.commit-plan >/dev/null 2>&1; then
+  showCommitPlan
+else # does not exist
+  createCommitPlan
+fi
