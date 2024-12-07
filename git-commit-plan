@@ -47,7 +47,7 @@ createCommitPlan() {
 
     commit_data=$(serializeCommitMessages "${commit_plans[@]}")
     git config "branch.$BRANCH.commit-plan" "$commit_data"
-    echo "commit-plan created\n"
+    echo "    commit-plan created\n"
 }
 
 addCommitMessage(){
@@ -80,13 +80,29 @@ deleteCommitMessage(){
     echo
 }
 
-    #   git commit-plan --commit -c
-commitChanges(){
-    # option to commit staged changes using a commit plan as the message
-    # check for staged changes
-    # promt the user to select a message from the plan
-    # commit the changes with the message
-    # remove the selected commit message from the commit-plan
+
+commitChanges() {
+    if git diff --cached --quiet; then
+        echo "No staged changes."
+        exit 0
+    fi
+    
+    header
+    showCommitPlan | sed '=' | sed 'N;s/\n/ /'
+    echo
+    echo -n "Select a message(#) to commit: "
+    read -r message_number < /dev/tty
+
+    commit_data=$(git config --get branch.$BRANCH.commit-plan)
+    local commit_plans=("${(s:%:)commit_data}")
+
+    git commit -m "${commit_plans[message_number]//_/ }"
+    # if Commit was successful
+    if [[ $? -eq 0 ]]; then
+        commit_plans[$message_number]=()
+        commit_data="${(j:%:)commit_plans}"
+        git config "branch.$BRANCH.commit-plan" "$commit_data"
+    fi
 }
 
 
@@ -100,13 +116,13 @@ commitChanges(){
 if [[ $# -eq 0 ]]; then
     # if commit-plan already exists
     if git config --get branch.$BRANCH.commit-plan >/dev/null 2>&1; then
-    header
-    showCommitPlan
-    echo
+        header
+        showCommitPlan
+        echo
     else # does not exist
-    header
-    createCommitPlan
-    echo
+        header
+        createCommitPlan
+        echo
     fi
     exit 0
 fi
@@ -121,6 +137,7 @@ while [[ $# -gt 0 ]]; do
             echo "Usage: git commit-plan [options]"
             echo "options:"
             echo " -n| --new               Create a new commit plan."
+            echo " -c| --commit            Commit staged changes."
             echo " -m| --message [message] Add a Message to the commit plan."
             echo " -d| --delete            Remove a Message from the commit plan."
             echo " -h| --help              Show this help message."
