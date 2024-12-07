@@ -4,34 +4,108 @@
 #   git commit-plan -d <message><tab completion>
 # option to remove a message from the commit-plan
 
-echo
-echo "Commit-Plan:"
-echo " - Add your Commit messages."
-echo " - Press <ENTER> to continue."
-echo " - Enter an empty message to Finish."
-echo
+# |---------------------------|
+# |        Commit-Plan        |
+# |---------------------------|
 
-commit_plans=()
+BRANCH=$(git symbolic-ref --short HEAD)
 
-while true; do
-    echo -n " => "
-    read -r plan < /dev/tty
-    # if plan is empty
-    if [[ -z "$plan" ]]; then
-        break;
-    else
-        commit_plans+=("$plan")
+serializeCommitMessages() {
+    local plans=("${(@)@}")
+    local trimmed=("${plans[@]%%[[:space:]]##}")
+    local underscored=("${trimmed[@]// /_}")
+    echo "${(j:%:)underscored}"
+}
+
+createCommitPlan() {
+    echo
+    echo "Commit-Plan:"
+    echo " - Add your Commit messages."
+    echo " - Press <ENTER> to continue."
+    echo " - Enter an empty message to Finish."
+    echo
+
+    commit_plans=()
+    while true; do
+        echo -n " => "
+        read -r plan < /dev/tty
+        if [[ -z "$plan" ]]; then
+            # if plan is empty
+            break;
+        else
+            commit_plans+=("$plan")
+        fi
+    done
+
+    commit_data=$(serializeCommitMessages "${commit_plans[@]}")
+    git config "branch.$BRANCH.commit-plan" "$commit_data"
+    echo "commit-plan created\n"
+}
+
+showCommitPlan(){
+    commit_data=$(git config --get branch.$BRANCH.commit-plan)
+    local commit_plans=("${(s:%:)commit_data}")
+    echo
+    echo "Commit-Plan:"
+    echo
+    for plan in "${commit_plans[@]}"; do
+        echo " => ${plan//_/ }"
+    done
+    echo
+    echo "commit changes using a message with:"
+    echo "'git commit-plan --commit'"
+    echo
+}
+
+addCommitMessage(){
+    commit_data=$(git config --get branch.$BRANCH.commit-plan)
+    new_message=$1
+    commit_data=$(serializeCommitMessages "$commit_data" "$new_message")
+    git config "branch.$BRANCH.commit-plan" "$commit_data"
+}
+
+
+# |----------------------|
+# |        main()        |
+# |----------------------|
+
+    #   no arguments
+    # ----------------
+
+if [[ $# -eq 0 ]]; then
+    # if commit-plan already exists
+    if git config --get branch.$BRANCH.commit-plan >/dev/null 2>&1; then
+    showCommitPlan
+    else # does not exist
+    createCommitPlan
     fi
+    exit 0
+fi
+
+    #   arguments
+    # -------------
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --help | -h)
+            echo "Usage: git commit-plan [options]"
+            echo "options:"
+            echo " -n| --new     Create a new commit plan."
+            echo " -m| --message Add a new Message to the commit plan."
+            echo " -h| --help    Show this help message."
+            exit 0
+            ;;
+        --new | -n)
+            createCommitPlan
+            exit 0
+            ;;
+        --message | -m)
+            addCommitMessage "$2"
+            exit 0
+            ;;
+        *)
+
+            ;;
+    esac
+    shift
 done
-
-# Display collected commit-plans
-echo "You entered the following commit-plans:"
-for plan in "${commit_plans[@]}"; do
-    echo "- $plan"
-done
-
-no_spaces=(${commit_plans[@]// /_})
-commit_data=${(j:%:)no_spaces}
-echo "$commit_data"
-
-git config "branch.${$(git symbolic-ref --short HEAD)}.commit-plan" "$commit_data"
