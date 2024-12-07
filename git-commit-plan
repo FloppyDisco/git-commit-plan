@@ -1,5 +1,9 @@
 #!/bin/zsh
 
+#   git commit-plan -m <message><tab completion>
+# option to add a message to the commit-plan
+
+
 echo
 echo "Commit-Plan:"
 echo " - Add your Commit messages."
