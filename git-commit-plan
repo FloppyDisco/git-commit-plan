@@ -10,6 +10,12 @@
 
 BRANCH=$(git symbolic-ref --short HEAD)
 
+header(){
+    echo
+    echo "Commit-Plan:"
+    echo
+}
+
 serializeCommitMessages() {
     local plans=("${(@)@}")
     local trimmed=("${plans[@]%%[[:space:]]##}")
@@ -75,9 +81,13 @@ addCommitMessage(){
 if [[ $# -eq 0 ]]; then
     # if commit-plan already exists
     if git config --get branch.$BRANCH.commit-plan >/dev/null 2>&1; then
+    header
     showCommitPlan
+    echo
     else # does not exist
+    header
     createCommitPlan
+    echo
     fi
     exit 0
 fi
@@ -88,6 +98,7 @@ fi
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --help | -h)
+            header
             echo "Usage: git commit-plan [options]"
             echo "options:"
             echo " -n| --new     Create a new commit plan."
@@ -96,7 +107,9 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         --new | -n)
+            header
             createCommitPlan
+            echo
             exit 0
             ;;
         --message | -m)
