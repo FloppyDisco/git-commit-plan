@@ -1,5 +1,11 @@
 #!/bin/zsh
 
+# if
+# branch already has a commit-plan
+    # display the commit plan
+# else
+    # prompt user to create one
+
 echo
 echo "Commit-Plan:"
 echo " - Add your Commit messages."
