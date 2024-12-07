@@ -1,14 +1,17 @@
 #!/bin/zsh
 
-#   git commit-plan -m <message><tab completion>
-# option to add a message to the commit-plan
-
-
 # |---------------------------|
 # |        Commit-Plan        |
 # |---------------------------|
 
 BRANCH=$(git symbolic-ref --short HEAD)
+
+serializeCommitMessages() {
+    local plans=("${(@)@}")
+    local trimmed=("${plans[@]%%[[:space:]]##}")
+    local underscored=("${trimmed[@]// /_}")
+    echo "${(j:%:)underscored}"
+}
 
 createCommitPlan() {
     echo
@@ -30,9 +33,7 @@ createCommitPlan() {
         fi
     done
 
-    no_spaces=("${(@)commit_plans[@]%%[[:space:]]##}")
-    no_spaces=("${no_spaces[@]// /_}")
-    commit_data="${(j:%:)no_spaces}"
+    commit_data=$(serializeCommitMessages "${commit_plans[@]}")
     git config "branch.$BRANCH.commit-plan" "$commit_data"
     echo "commit-plan created\n"
 }
