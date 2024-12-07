@@ -10,7 +10,8 @@ echo
 commit_plans=()
 
 while true; do
-    read -r "plan? => "
+    echo -n " => "
+    read -r plan < /dev/tty
     # if plan is empty
     if [[ -z "$plan" ]]; then
         break;
