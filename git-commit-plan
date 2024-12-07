@@ -1,9 +1,5 @@
 #!/bin/zsh
 
-
-#   git commit-plan -d <message><tab completion>
-# option to remove a message from the commit-plan
-
 # |---------------------------|
 # |        Commit-Plan        |
 # |---------------------------|
@@ -23,9 +19,15 @@ serializeCommitMessages() {
     echo "${(j:%:)underscored}"
 }
 
+showCommitPlan(){
+    commit_data=$(git config --get branch.$BRANCH.commit-plan)
+    local commit_plans=("${(s:%:)commit_data}")
+    for plan in "${commit_plans[@]}"; do
+        echo " => ${plan//_/ }"
+    done
+}
+
 createCommitPlan() {
-    echo
-    echo "Commit-Plan:"
     echo " - Add your Commit messages."
     echo " - Press <ENTER> to continue."
     echo " - Enter an empty message to Finish."
@@ -46,21 +48,6 @@ createCommitPlan() {
     commit_data=$(serializeCommitMessages "${commit_plans[@]}")
     git config "branch.$BRANCH.commit-plan" "$commit_data"
     echo "commit-plan created\n"
-}
-
-showCommitPlan(){
-    commit_data=$(git config --get branch.$BRANCH.commit-plan)
-    local commit_plans=("${(s:%:)commit_data}")
-    echo
-    echo "Commit-Plan:"
-    echo
-    for plan in "${commit_plans[@]}"; do
-        echo " => ${plan//_/ }"
-    done
-    echo
-    echo "commit changes using a message with:"
-    echo "'git commit-plan --commit'"
-    echo
 }
 
 addCommitMessage(){
@@ -113,6 +100,7 @@ while [[ $# -gt 0 ]]; do
             exit 0
             ;;
         --message | -m)
+            header
             addCommitMessage "$2"
             exit 0
             ;;
