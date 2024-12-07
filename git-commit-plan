@@ -57,6 +57,30 @@ addCommitMessage(){
     git config "branch.$BRANCH.commit-plan" "$commit_data"
 }
 
+deleteCommitMessage(){
+    # show messages with numbers
+    showCommitPlan | sed '=' | sed 'N;s/\n/ /'
+    echo
+    echo -n "Select a message(#) to delete: "
+    read -r message_number < /dev/tty
+
+    commit_data=$(git config --get branch.$BRANCH.commit-plan)
+    local commit_plans=("${(s:%:)commit_data}")
+
+    if [[ $message_number -lt 1 || $message_number -gt ${#commit_plans[@]} ]]; then
+        echo "Invalid message number."
+    fi
+
+    local deleted_message="${commit_plans[message_number]}"
+    commit_plans[$message_number]=()
+    commit_data="${(j:%:)commit_plans}"
+    git config "branch.$BRANCH.commit-plan" "$commit_data"
+
+    echo "Deleted: ${deleted_message//_/ }"
+    echo
+}
+
+
 
 # |----------------------|
 # |        main()        |
@@ -88,9 +112,11 @@ while [[ $# -gt 0 ]]; do
             header
             echo "Usage: git commit-plan [options]"
             echo "options:"
-            echo " -n| --new     Create a new commit plan."
-            echo " -m| --message Add a new Message to the commit plan."
-            echo " -h| --help    Show this help message."
+            echo " -n| --new               Create a new commit plan."
+            echo " -m| --message [message] Add a Message to the commit plan."
+            echo " -d| --delete            Remove a Message from the commit plan."
+            echo " -h| --help              Show this help message."
+            echo
             exit 0
             ;;
         --new | -n)
@@ -102,6 +128,11 @@ while [[ $# -gt 0 ]]; do
         --message | -m)
             header
             addCommitMessage "$2"
+            exit 0
+            ;;
+        --delete | -d)
+            header
+            deleteCommitMessage
             exit 0
             ;;
         *)
