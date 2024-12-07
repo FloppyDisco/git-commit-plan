@@ -49,12 +49,42 @@ showCommitPlan(){
 }
 
 
-#   main()
-# ----------
+# |----------------------|
+# |        main()        |
+# |----------------------|
 
-# if commit-plan already exists
-if git config --get branch.$BRANCH.commit-plan >/dev/null 2>&1; then
-  showCommitPlan
-else # does not exist
-  createCommitPlan
+    #   no arguments
+    # ----------------
+
+if [[ $# -eq 0 ]]; then
+    # if commit-plan already exists
+    if git config --get branch.$BRANCH.commit-plan >/dev/null 2>&1; then
+    showCommitPlan
+    else # does not exist
+    createCommitPlan
+    fi
+    exit 0
 fi
+
+    #   arguments
+    # -------------
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --help|-h)
+            echo "Usage: git commit-plan [options]"
+            echo "options:"
+            echo "  --new  | -n  Create a new commit plan."
+            echo "  --help | -h  Show this help message."
+            exit 0
+            ;;
+        --new| -n)
+            createCommitPlan
+            exit 0
+            ;;
+        *)
+        
+            ;;
+    esac
+    shift
+done
