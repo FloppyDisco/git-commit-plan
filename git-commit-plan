@@ -53,6 +53,13 @@ showCommitPlan(){
     echo
 }
 
+addCommitMessage(){
+    commit_data=$(git config --get branch.$BRANCH.commit-plan)
+    new_message=$1
+    commit_data=$(serializeCommitMessages "$commit_data" "$new_message")
+    git config "branch.$BRANCH.commit-plan" "$commit_data"
+}
+
 
 # |----------------------|
 # |        main()        |
@@ -76,15 +83,20 @@ fi
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --help|-h)
+        --help | -h)
             echo "Usage: git commit-plan [options]"
             echo "options:"
-            echo "  --new  | -n  Create a new commit plan."
-            echo "  --help | -h  Show this help message."
+            echo " -n| --new     Create a new commit plan."
+            echo " -m| --message Add a new Message to the commit plan."
+            echo " -h| --help    Show this help message."
             exit 0
             ;;
-        --new| -n)
+        --new | -n)
             createCommitPlan
+            exit 0
+            ;;
+        --message | -m)
+            addCommitMessage "$2"
             exit 0
             ;;
         *)
