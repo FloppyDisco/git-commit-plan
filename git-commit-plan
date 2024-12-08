@@ -8,6 +8,8 @@ BRANCH=$(git symbolic-ref --short HEAD)
 
 header(){
     echo
+    echo "Branch: $BRANCH"
+    echo
     echo "Commit-Plan:"
     echo
 }
@@ -86,7 +88,7 @@ commitChanges() {
         echo "No staged changes."
         exit 0
     fi
-    
+
     header
     showCommitPlan | sed '=' | sed 'N;s/\n/ /'
     echo
