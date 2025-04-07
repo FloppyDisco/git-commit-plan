@@ -41,6 +41,7 @@ createCommitPlan() {
         read -r plan < /dev/tty
         if [[ -z "$plan" ]]; then
             # if plan is empty
+            echo "\n";
             break;
         else
             commit_plans+=("$plan")
