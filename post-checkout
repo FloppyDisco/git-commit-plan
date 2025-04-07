@@ -1,0 +1,33 @@
+#!/bin/zsh
+
+# |-----------------------------|
+# |        Post-Checkout        |
+# |-----------------------------|
+# https://git-scm.com/docs/githooks
+# $1 = ref to prev Head
+# $2 = ref to new  Head
+# $3 = checkout type 0 for file 1 for branch
+
+
+    #   Commit-Plan
+    # ---------------
+
+# if running in an interactive terminal
+# && this is a branch checkout
+if [ -t 1 ] && [ "$3" = "1" ]; then
+
+    BRANCH_NAME=$(git symbolic-ref --short -q HEAD)
+    NUM_CHECKOUTS=`git reflog --date=local | grep -o ${BRANCH_NAME} | wc -l`
+
+    #if the refs of the previous and new heads are the same
+    #AND the number of checkouts equals one, a new branch has been created
+    if [ "$1" = "$2"  ] && [ ${NUM_CHECKOUTS} -eq 1 ]; then
+
+        echo "Looks like you created a new branch"
+        read -qs "RESPONSE?Do you want to add a commit-plan: (Y/n)"
+        echo
+        if [[ "$RESPONSE" = "y" || "$RESPONSE" = "Y" ]]; then
+            exec git-plan
+        fi
+    fi
+fi
